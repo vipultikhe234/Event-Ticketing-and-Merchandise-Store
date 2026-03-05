@@ -22,11 +22,13 @@ class EventResource extends JsonResource
             'time' => $this->time,
             'venue' => $this->venue,
             'ticket_price' => $this->ticket_price,
+            'category' => $this->category ? $this->category->name : 'N/A',
             'performers' => $this->performers->map(function ($p) {
                 return [
                     'id' => $p->id,
                     'name' => $p->name,
                     'bio' => $p->bio,
+                    'image' => $p->image ? asset($p->image) : null,
                     'spotify_id' => $p->spotify_id
                 ];
             }),

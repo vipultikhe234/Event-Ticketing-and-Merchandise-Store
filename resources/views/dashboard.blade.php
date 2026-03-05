@@ -25,6 +25,31 @@
         </div>
     </div>
 
+    <h2 class="mb-3 mt-5">Official Merchandise</h2>
+    <div class="mt-2">
+        <div class="row" id="merchandise-cards-container">
+            @foreach ($merchandises as $item)
+                <div class="col-md-3 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">{{ $item->name }}</h5>
+                            <p class="card-text text-muted">{{ Str::limit($item->description, 60) }}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span class="h5 mb-0">₹{{ number_format($item->price, 2) }}</span>
+                                <button class="btn btn-outline-primary btn-sm buy-merch" 
+                                        data-id="{{ $item->id }}" 
+                                        data-name="{{ $item->name }}"
+                                        data-price="{{ $item->price }}">
+                                    Buy Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+
     @include('components.modals')
 </div>
 
@@ -54,6 +79,9 @@
                 }
                 if (e.target.closest('.book-ticket')) {
                     this.handleBookTicket(e.target.closest('.book-ticket'));
+                }
+                if (e.target.closest('.buy-merch')) {
+                    this.handleBuyMerch(e.target.closest('.buy-merch'));
                 }
                 if (e.target.closest('#verifyCoupon')) {
                     this.handleVerifyCoupon();
@@ -140,17 +168,45 @@
 
         handleBookTicket(button) {
             this.currentEvent = button.dataset.id;
+            this.currentMerch = null;
             this.currentPrice = parseFloat(button.dataset.price);
             this.currentDiscount = 0;
             this.isCouponVerified = false;
 
             // Reset form
             document.getElementById('event_id').value = this.currentEvent;
+            document.getElementById('merchandise_id').value = '';
             document.getElementById('tickets').value = 1;
             document.getElementById('coupon_code').value = '';
             document.getElementById('coupon-status').innerHTML = '';
             document.getElementById('price-summary').classList.add('d-none');
             document.getElementById('submitTicket').disabled = false;
+            
+            document.getElementById('purchaseModalTitle').textContent = 'Book Ticket';
+            document.getElementById('quantityLabel').textContent = 'Number of Tickets';
+
+            this.updatePriceSummary();
+            new bootstrap.Modal(document.getElementById('bookTicketModal')).show();
+        },
+
+        handleBuyMerch(button) {
+            this.currentEvent = null;
+            this.currentMerch = button.dataset.id;
+            this.currentPrice = parseFloat(button.dataset.price);
+            this.currentDiscount = 0;
+            this.isCouponVerified = false;
+
+            // Reset form
+            document.getElementById('event_id').value = '';
+            document.getElementById('merchandise_id').value = this.currentMerch;
+            document.getElementById('tickets').value = 1;
+            document.getElementById('coupon_code').value = '';
+            document.getElementById('coupon-status').innerHTML = '';
+            document.getElementById('price-summary').classList.add('d-none');
+            document.getElementById('submitTicket').disabled = false;
+
+            document.getElementById('purchaseModalTitle').textContent = 'Buy Merchandise: ' + button.dataset.name;
+            document.getElementById('quantityLabel').textContent = 'Quantity';
 
             this.updatePriceSummary();
             new bootstrap.Modal(document.getElementById('bookTicketModal')).show();
@@ -240,6 +296,7 @@
 
                 const formData = {
                     event_id: this.currentEvent,
+                    merchandise_id: this.currentMerch,
                     quantity: document.getElementById('tickets').value,
                     coupon_code: document.getElementById('coupon_code').value,
                     user_id: {{ $user->id }}
