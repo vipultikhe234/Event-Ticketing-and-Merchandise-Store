@@ -1,69 +1,349 @@
-1. Clone the Repository – Clone the project to local machine and navigate to the project folder.
+# 🎵 Event Ticketing & Merchandise Store
 
-2. Install Dependencies – Install all required PHP and JavaScript packages to ensure the application runs smoothly.
-   composer install
-   composer require stripe/stripe-php
-   npm install
-   npm run dev
-   php artisan key:generate
-   php artisan migrate
-   php artisan db:seed --class=SeederClassName
-   php artisan queue:work
-   php artisan serve
-   composer require jwilsson/spotify-web-api-php
+A full-featured Laravel web application for a fictional music festival — allowing users to browse events, purchase tickets, buy merchandise, and discover performer music via Spotify integration.
 
-3. Configure Environment – Update the .env file with database connection, Stripe API keys, queue connection, and mail settings.
+---
 
-4. Run Migrations – Create the necessary database tables:
-   performers → Stores artists.
-   events → Stores event details linked to performers.
-   discount_codes → Stores discount/coupon codes.
-   orders → Tracks ticket purchases and payments.
+## 📋 Table of Contents
 
-5. Seed the Database – Insert sample data for performers, events, and discount codes to facilitate testing.
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Database Schema](#-database-schema)
+- [API Endpoints](#-api-endpoints)
+- [Prerequisites](#-prerequisites)
+- [Installation](#-installation)
+- [Environment Configuration](#-environment-configuration)
+- [Running the Application](#-running-the-application)
+- [Running Tests](#-running-tests)
+- [Third-Party Integrations](#-third-party-integrations)
+- [Ngrok Setup (for Stripe Webhooks)](#-ngrok-setup-for-stripe-webhooks)
+- [Caching Strategy](#-caching-strategy)
+- [PHP Extensions Required](#-php-extensions-required)
 
-6. Start the Queue Worker – Start the queue to process background jobs such as sending ticket confirmation emails.
+---
 
-7. Run the Application – Launch the local development server and access the application in browser.
+## ✨ Features
 
-8. Dependencies Required – PHP, Composer, Node.js, npm, Laravel framework, Stripe PHP SDK, and a MySQL database.
+- 🎟️ **Event Ticketing** — Browse events, view performer details, and purchase tickets via Stripe Checkout
+- 🛍️ **Merchandise Store** — Browse and buy official festival merchandise
+- 🎧 **Spotify Integration** — View top tracks for performers using the Spotify Web API
+- 💸 **Discount Codes** — Apply coupon codes for percentage-based discounts at checkout
+- ⏱️ **Countdown Timer** — Live countdown to each event via a custom Blade component
+- 🔌 **RESTful API** — JSON API for events and merchandise with proper resource formatting
+- ⚡ **Caching** — Spotify responses, event listings, and merchandise cached for performance
+- 🧪 **Automated Tests** — Feature tests for dashboard rendering and RESTful API
+- 🔐 **Authentication** — Session-based login/register for users
 
-9. Project Approach – The project is an event ticketing system that allows users to browse events, apply discount codes, purchase tickets via Stripe Checkout, and receive confirmation emails through queued jobs. The database links performers to events, tracks orders, and manages discount codes, following Laravel best practices and clean code structure.
+---
 
-10. Required PHP Extensions for Laravel + Stripe
-    In php.ini (usually in php\php.ini or XAMPP):
-    extension=curl → For HTTP requests (Stripe API)
-    extension=openssl → For secure connections
-    extension=mbstring → String handling
-    extension=pdo_mysql → MySQL connection
-    extension=bcmath → Laravel calculations (optional but recommended)
-    extension=fileinfo → Required for file uploads
+## 🛠 Tech Stack
 
-11. Payment Gateway (Stripe) Setup
+| Layer | Technology |
+|---|---|
+| Backend | PHP 8.x, Laravel 8 |
+| Frontend | Bootstrap 5, Alpine.js, SCSS via Laravel Mix |
+| Database | MySQL |
+| Payments | Stripe Checkout |
+| Music API | Spotify Web API |
+| Caching | File-based Cache (configurable to Redis) |
+| Queue | Database / Sync driver |
+| Icons | Font Awesome 6 (CDN) |
+| Testing | PHPUnit 9 |
 
-    1. Create a Stripe Account – Sign up at https://stripe.com
-       to get access to API keys.
-    2. Obtain API Keys – Publishable Key → For frontend (Stripe.js) -> Secret Key → For backend (server-side requests)
-    3. Update .env File – Add your Stripe keys: -> STRIPE_KEY=your_stripe_publishable_key -> STRIPE_SECRET=your_stripe_secret_key
-    4. Stripe PHP SDK – Make sure the package is installed: -> composer require stripe/stripe-php
-    5. Checkout Integration – The backend uses Stripe Checkout to create payment sessions. Users are redirected to Stripe’s secure payment page.
-    6. Handling Payment Success/Failure – After payment:
-    7. Stripe returns session_id to your success URL.
-    8. The application verifies the payment and updates the order status.
-    9. Emails (tickets) are sent via queued jobs.
+---
 
-12. Ngrok implementation -> Ngrok is a tool that exposes local development server to the internet via a secure public URL.
-    Laravel application runs locally (e.g., http://127.0.0.1:8000).
-    services like Stripe payment require a publicly accessible URL.
-    Ngrok generates a temporary HTTPS URL (like https://concessive-ventilable-angelica.ngrok-free.dev) that can be used as a callback URL
+## 🗄 Database Schema
 
-    1. Install Ngrok -> Download from https://ngrok.com/ and install it.
-    2. Expose Local Server -> If Laravel server is running on port 8000: ngrok http 8000 ->This will generate a public HTTPS URL. -> Example: https://concessive-ventilable-angelica.ngrok-free.dev
-    3. Update .env ->Set APP_URL to your Ngrok URL: -> APP_URL=https://concessive-ventilable-angelica.ngrok-free.dev
+```
+users               — Registered users
+performers          — Artists/performers (with Spotify ID, bio, image, category)
+events              — Festival events (linked to performer + category)
+event_performer     — Pivot table for many-to-many event ↔ performer relationship
+categories          — Categories for events and performers (e.g. Rock, Jazz)
+merchandises        — Festival merchandise (name, price, stock, image)
+discount_codes      — Coupon codes with percentage discount and expiry
+orders              — Ticket and merchandise orders (linked to Stripe session)
+jobs                — Queue jobs table
+```
 
-13. Spotify Integration (Performers Table)
-    1. Purpose -> The goal of integrating Spotify is to associate performers with their Spotify content so that users can preview their music, see albums, or listen to tracks before buying tickets. This improves user engagement and creates a richer event experience.
-    2. Spotify Developer Account -> Sign up at Spotify for Developers -> Create a new application to get: -> Client ID -> Client Secret
-    3. Install Spotify API Package -> composer require jwilsson/spotify-web-api-php
-    4. Configuration -> SPOTIFY_CLIENT_ID=your_client_id -> SPOTIFY_CLIENT_SECRET=your_client_secret
-"# Event-Ticketing-and-Merchandise-Store" 
+---
+
+## 🔌 API Endpoints
+
+All API routes are prefixed with `/api`.
+
+### Events
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/api-events` | List all events (with performers & category) |
+| `GET` | `/api/api-events/{id}` | Get a single event |
+| `POST` | `/api/register_performer` | Register a new performer |
+| `POST` | `/api/register_event` | Register a new event |
+| `GET` | `/api/get_performer` | Get event with performers and Spotify tracks |
+
+### Merchandise
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/merchandise` | List all merchandise |
+| `GET` | `/api/merchandise/{id}` | Get a single merchandise item |
+
+### Checkout
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/book-event` | Book tickets or buy merchandise (Stripe) |
+| `GET` | `/api/booking/success` | Verify Stripe payment success |
+| `GET` | `/api/booking/cancel` | Handle cancelled payment |
+| `POST` | `/api/check_coupon` | Validate a discount coupon code |
+| `POST` | `/api/insert_coupon` | Create a new discount coupon |
+
+---
+
+## ✅ Prerequisites
+
+Make sure you have the following installed:
+
+- **PHP** >= 8.0
+- **Composer** >= 2.x
+- **Node.js** >= 16.x & **npm** >= 8.x
+- **MySQL** >= 5.7
+- **Git**
+
+Enable these PHP extensions in `php.ini`:
+```
+extension=curl
+extension=openssl
+extension=mbstring
+extension=pdo_mysql
+extension=bcmath
+extension=fileinfo
+extension=redis    ; optional, for Redis caching
+```
+
+---
+
+## 🚀 Installation
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/vipultikhe234/Event-Ticketing-and-Merchandise-Store.git
+cd Event-Ticketing-and-Merchandise-Store
+```
+
+### 2. Install PHP Dependencies
+
+```bash
+composer install
+```
+
+### 3. Install JavaScript Dependencies & Compile Assets
+
+```bash
+npm install
+npm run dev
+```
+
+### 4. Set Up Environment File
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+### 5. Configure Database
+
+Update your `.env` file with your MySQL database credentials (see [Environment Configuration](#-environment-configuration)).
+
+### 6. Run Migrations
+
+```bash
+php artisan migrate
+```
+
+### 7. Seed the Database
+
+```bash
+php artisan db:seed --class=CategoryAndMerchandiseSeeder
+```
+
+This seeds:
+- 5 event categories (Music Festival, Rock, Pop, Electronic, Jazz)
+- 4 merchandise items (T-Shirt, Hoodie, Poster, Wristband)
+- Links existing events/performers in the pivot table
+
+---
+
+## ⚙️ Environment Configuration
+
+Copy `.env.example` to `.env` and fill in the following:
+
+```dotenv
+APP_NAME="Event Ticketing"
+APP_ENV=local
+APP_KEY=          # Generated by php artisan key:generate
+APP_DEBUG=true
+APP_URL=http://localhost:8000   # Use your Ngrok URL for Stripe webhooks
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=musicfest
+DB_USERNAME=root
+DB_PASSWORD=
+
+CACHE_DRIVER=file      # Change to 'redis' for Redis caching
+QUEUE_CONNECTION=sync  # Change to 'database' for background queues
+
+# Stripe (get keys at https://dashboard.stripe.com/apikeys)
+STRIPE_KEY=pk_test_xxxxxxxxxxxx
+STRIPE_SECRET=sk_test_xxxxxxxxxxxx
+
+# Spotify (get keys at https://developer.spotify.com/dashboard)
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+
+# JWT (optional, for API auth)
+JWT_SECRET=your_jwt_secret
+```
+
+---
+
+## ▶️ Running the Application
+
+```bash
+php artisan serve
+```
+
+Visit: [http://127.0.0.1:8000](http://127.0.0.1:8000)
+
+**Optional — start the queue worker** (for background jobs like emails):
+
+```bash
+php artisan queue:work
+```
+
+---
+
+## 🧪 Running Tests
+
+```bash
+php artisan test
+```
+
+Or run only the feature tests:
+```bash
+vendor/bin/phpunit tests/Feature/EventTest.php
+```
+
+**Test coverage includes:**
+- ✅ Dashboard renders correctly for authenticated users with event data
+- ✅ RESTful Events API returns proper JSON response
+
+---
+
+## 🔗 Third-Party Integrations
+
+### 💳 Stripe Payments
+
+1. Sign up at [https://stripe.com](https://stripe.com)
+2. Get your **Publishable Key** and **Secret Key** from the Stripe Dashboard
+3. Add them to `.env` as `STRIPE_KEY` and `STRIPE_SECRET`
+4. The app uses **Stripe Checkout** — users are redirected to Stripe's hosted payment page
+5. After payment, Stripe redirects back with a `session_id` which the app verifies
+
+### 🎧 Spotify API
+
+1. Sign up at [https://developer.spotify.com](https://developer.spotify.com)
+2. Create a new app to get your **Client ID** and **Client Secret**
+3. Add them to `.env` as `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`
+4. The app uses **Client Credentials flow** (no user login required)
+5. Performer top tracks are fetched using their **Spotify Artist ID** and cached for 1 hour
+
+To link a performer to Spotify, set their `spotify_id` field to the Spotify Artist ID.
+> Example: Coldplay's Artist ID is `4gzpq5Yv3Ls2S5NWotHJuN`
+
+---
+
+## 🌐 Ngrok Setup (for Stripe Webhooks)
+
+Stripe requires a **publicly accessible HTTPS URL** for payment callbacks. Use [Ngrok](https://ngrok.com) during local development:
+
+```bash
+# After installing Ngrok
+ngrok http 8000
+```
+
+This generates a URL like: `https://xxxx-xxxx.ngrok-free.app`
+
+Update your `.env`:
+```dotenv
+APP_URL=https://xxxx-xxxx.ngrok-free.app
+```
+
+---
+
+## ⚡ Caching Strategy
+
+| Data | Cache Key | TTL |
+|---|---|---|
+| Spotify access token | `spotify_access_token` | 55 min |
+| Performer top tracks | `spotify_top_tracks_{id}_{country}` | 60 min |
+| Event listings (dashboard) | `event_listings` | 60 min |
+| Merchandise listings | `merchandise_listings` | 60 min |
+| RESTful events API | `api_events_index` | 60 min |
+
+Cache can be cleared with:
+```bash
+php artisan cache:clear
+```
+
+---
+
+## 📁 Key Project Structure
+
+```
+app/
+├── Http/
+│   ├── Controllers/
+│   │   ├── EventController.php        # Dashboard, event CRUD, RESTful API
+│   │   ├── CheckoutController.php     # Stripe checkout, ticket & merch buying
+│   │   ├── MerchandiseController.php  # Merchandise API
+│   │   └── DiscountCodeController.php # Coupon validation
+│   └── Resources/
+│       └── EventResource.php          # API response format for events
+├── Models/
+│   ├── Event.php       # belongsTo Category, belongsToMany Performers
+│   ├── Performer.php   # belongsTo Category, belongsToMany Events
+│   ├── Category.php    # hasMany Events + Performers
+│   ├── Merchandise.php # Products available for purchase
+│   └── Order.php       # Tracks all ticket + merchandise purchases
+└── Services/
+    └── SpotifyService.php   # Spotify API with caching
+
+resources/
+├── views/
+│   ├── dashboard.blade.php          # Main event + merchandise listing page
+│   ├── components/
+│   │   ├── event-card.blade.php     # Event card with countdown timer
+│   │   ├── featured-performers.blade.php
+│   │   ├── countdown-timer.blade.php
+│   │   └── modals.blade.php         # Booking & performer modals
+│   └── layouts/app.blade.php        # Main layout with navbar & toast
+
+database/
+└── seeders/
+    └── CategoryAndMerchandiseSeeder.php
+```
+
+---
+
+## 👤 Author
+
+**Vipul Tikhe**
+- GitHub: [@vipultikhe234](https://github.com/vipultikhe234)
+
+---
+
+## 📄 License
+
+This project is open-source and available under the [MIT License](LICENSE).
