@@ -25,14 +25,15 @@
         <form id="ticketForm">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Book Ticket</h5>
+                    <h5 class="modal-title" id="purchaseModalTitle">Book Ticket</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="event_id" name="event_id">
+                    <input type="hidden" id="merchandise_id" name="merchandise_id">
 
                     <div class="mb-3">
-                        <label for="tickets" class="form-label">Number of Tickets</label>
+                        <label for="tickets" class="form-label" id="quantityLabel">Number of Tickets</label>
                         <input type="number" id="tickets" name="tickets" class="form-control" min="1" value="1" required>
                     </div>
 

@@ -22,20 +22,25 @@ class CheckoutController extends Controller
     public function bookEvent(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'event_id'    => 'required|integer|exists:events,id',
-            'quantity'    => 'required|integer|min:1',
-            'coupon_code' => 'nullable|string',
-            'user_id'     => 'required|integer|exists:users,id',
+            'event_id'       => 'required_without:merchandise_id|integer|exists:events,id',
+            'merchandise_id' => 'required_without:event_id|integer|exists:merchandises,id',
+            'quantity'       => 'required|integer|min:1',
+            'coupon_code'    => 'nullable|string',
+            'user_id'        => 'required|integer|exists:users,id',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['status' => 0, 'message' => $validator->errors()], 422);
         }
 
-        $event = Event::findOrFail($request->event_id);
+        $purchaseType = $request->event_id ? 'event' : 'merchandise';
+        $item = $purchaseType === 'event' 
+            ? Event::findOrFail($request->event_id) 
+            : \App\Models\Merchandise::findOrFail($request->merchandise_id);
+
         $quantity = $request->quantity;
-        $ticketPrice = $event->ticket_price;
-        $initialTotal = $ticketPrice * $quantity;
+        $pricePerItem = $purchaseType === 'event' ? $item->ticket_price : $item->price;
+        $initialTotal = $pricePerItem * $quantity;
 
         $discountCodeId = null;
         $discountAmount = 0;
@@ -53,7 +58,7 @@ class CheckoutController extends Controller
 
             if ($coupon->single_use) {
                 $alreadyUsed = Order::where('user_id', $request->user_id)
-                    ->where('discount_code', $coupon->id)
+                    ->where('discount_code_id', $coupon->id)
                     ->exists();
 
                 if ($alreadyUsed) {
@@ -72,26 +77,26 @@ class CheckoutController extends Controller
 
         try {
             $order = Order::create([
-                'user_id'         => $request->user_id,
-                'event_id'        => $event->id,
-                'total_amount'    => $totalAmount,
-                'status'          => 'pending',
-                'quantity'        => $quantity,
+                'user_id'          => $request->user_id,
+                'event_id'         => $request->event_id,
+                'merchandise_id'   => $request->merchandise_id,
+                'total_amount'     => $totalAmount,
+                'status'           => 'pending',
+                'quantity'         => $quantity,
                 'discount_code_id' => $discountCodeId,
             ]);
 
-            $currentUrl = $request->getSchemeAndHttpHost();
-            $returnUrl = $request->header('referer') ?? url('/events');
+            $returnUrl = $request->header('referer') ?? url('/dashboard');
 
             $checkoutSession = Session::create([
                 'payment_method_types' => ['card'],
                 'line_items' => [[
                     'price_data' => [
-                        'currency' => strtolower($event->currency ?? 'inr'),
+                        'currency' => strtolower($item->currency ?? 'inr'),
                         'unit_amount' => $totalAmountCents,
                         'product_data' => [
-                            'name' => "Ticket(s) for {$event->title}",
-                            'description' => "{$quantity} tickets. Discount: " . number_format($discountAmount, 2),
+                            'name' => ($purchaseType === 'event' ? "Ticket(s) for " : "Merchandise: ") . ($item->title ?? $item->name),
+                            'description' => "{$quantity} item(s). Discount: " . number_format($discountAmount, 2),
                         ],
                     ],
                     'quantity' => 1,

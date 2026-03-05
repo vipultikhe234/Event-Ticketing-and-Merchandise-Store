@@ -3,6 +3,7 @@
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DiscountCodeController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\MerchandiseController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +37,15 @@ Route::controller(EventController::class)->group(function () {
     Route::post('/register_event', 'registerEvent');
     Route::get('/get_performer', 'getEventWithPerformer');
 });
+
+// RESTful API for Events
+Route::get('/api-events', [EventController::class, 'apiIndex']);
+Route::get('/api-events/{event}', [EventController::class, 'apiShow']);
+
+// Merchandise API
+Route::get('/merchandise', [MerchandiseController::class, 'index']);
+Route::get('/merchandise/{id}', [MerchandiseController::class, 'show']);
+
 Route::post('/check_coupon', [DiscountCodeController::class, 'checkCoupon']);
 Route::post('/insert_coupon', [DiscountCodeController::class, 'createDiscountCode']);
 Route::post('/book-event', [CheckoutController::class, 'bookEvent']);
