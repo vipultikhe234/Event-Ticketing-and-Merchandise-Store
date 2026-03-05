@@ -1,0 +1,52 @@
+@use 'components/event-card';
+// Bootstrap
+@import '~bootstrap/scss/bootstrap';
+
+// Font Awesome
+@import '~@fortawesome/fontawesome-free/css/all.css';
+
+
+// Custom styles
+.event-card {
+    transition: transform 0.2s;
+
+    &:hover {
+        transform: translateY(-5px);
+    }
+}
+
+.performer-card {
+    img {
+        transition: transform 0.3s;
+    }
+
+    &:hover img {
+        transform: scale(1.05);
+    }
+}
+
+.countdown-timer {
+    .countdown-box {
+        min-width: 70px;
+    }
+
+    .countdown-value {
+        background-color: #1F2937 !important;
+;
+        font-size: 1rem;
+    font-weight: 600;
+    min-width: 80px;
+    text-align: center;    }
+
+    .countdown-label {
+        font-size: 0.75rem;
+        opacity: 0.8;
+    }
+}
+
+.time-sep {
+        font-size: 1rem;
+    font-weight: 700;
+    color: #6B7280
+;
+}
