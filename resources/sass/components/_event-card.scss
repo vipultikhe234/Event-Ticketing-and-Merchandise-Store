@@ -1,4 +1,4 @@
-@use "../variables" as *;
+// Variables inherited from parent app.scss @import chain
 
 .card-header {
     background-color: $dark !important;
@@ -19,6 +19,7 @@
         gap: 16px;
         color: $color-muted;
         font-size: 0.8rem;
+
         .meta-item {
             display: flex;
             align-items: center;
@@ -28,15 +29,14 @@
 }
 
 .card-body {
-    display: flex
-;
+    display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 24px;
+
     .actions {
-            display: flex
-;
-    align-items: center;
-    gap: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
     }
 }
