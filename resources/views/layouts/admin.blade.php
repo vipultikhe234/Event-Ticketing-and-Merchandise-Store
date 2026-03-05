@@ -50,7 +50,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
         <div class="container-fluid px-4">
             <a class="navbar-brand d-flex align-items-center fw-bold text-white text-decoration-none" href="{{ route('admin.dashboard') }}">
-                <img src="{{ asset('images/logo.jpg') }}" alt="VT Logo" height="30" class="me-2 rounded">
+                <x-vt-logo :size="30" class="me-2 rounded-1" />
                 <span class="small uppercase tracking-wider">Admin Panel</span>
             </a>
 

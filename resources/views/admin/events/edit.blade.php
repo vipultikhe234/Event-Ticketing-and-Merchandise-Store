@@ -15,7 +15,7 @@
     </div>
 </div>
 
-<form action="{{ route('admin.events.update', $event->id) }}" method="POST">
+<form action="{{ route('admin.events.update', $event->id) }}" method="POST" enctype="multipart/form-data">
     @csrf
     @method('PUT')
     <div class="row mt-4">
@@ -51,14 +51,14 @@
                         <div class="col-md-3">
                             <div class="mb-4">
                                 <label for="date" class="form-label fw-bold">Date <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control @error('date') is-invalid @enderror" id="date" name="date" value="{{ old('date', $event->date) }}" required>
+                                <input type="date" class="form-control @error('date') is-invalid @enderror" id="date" name="date" value="{{ old('date', $event->date?->format('Y-m-d')) }}" required>
                                 @error('date') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="mb-4">
                                 <label for="time" class="form-label fw-bold">Time <span class="text-danger">*</span></label>
-                                <input type="time" class="form-control @error('time') is-invalid @enderror" id="time" name="time" value="{{ old('time', $event->time) }}" required>
+                                <input type="time" class="form-control @error('time') is-invalid @enderror" id="time" name="time" value="{{ old('time', $event->time?->format('H:i')) }}" required>
                                 @error('time') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
@@ -145,14 +145,36 @@
                 <div class="card-header bg-white py-3">
                     <h5 class="card-title mb-0 text-primary"><i class="fas fa-image me-2"></i>Event Media</h5>
                 </div>
-                <div class="card-body p-4 pt-0">
+                <div class="card-body p-4 pt-3">
+
+                    {{-- Current image preview --}}
+                    <div class="mb-3 text-center">
+                        <img id="image-preview" 
+                             src="{{ $event->image_url ?: 'https://placehold.co/600x300?text=No+Image' }}"
+                             class="img-fluid rounded border" 
+                             style="max-height: 220px; width: 100%; object-fit: cover;"
+                             alt="Preview">
+                    </div>
+
+                    {{-- Upload local file --}}
+                    <div class="mb-3">
+                        <label for="image_file" class="form-label fw-bold">Upload from Computer</label>
+                        <input type="file" class="form-control @error('image_file') is-invalid @enderror" id="image_file" name="image_file" accept="image/jpeg,image/png,image/jpg,image/webp" onchange="previewLocalFile(this)">
+                        <div class="form-text">JPG, PNG or WebP. Max 2MB. <strong>This overrides the URL below.</strong></div>
+                        <div id="image_file_error" class="invalid-feedback" style="display:none;">File must be less than 2MB.</div>
+                        @error('image_file') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    {{-- Divider --}}
+                    <div class="d-flex align-items-center gap-2 mb-3 text-muted small">
+                        <hr class="flex-grow-1 my-0"> OR <hr class="flex-grow-1 my-0">
+                    </div>
+
+                    {{-- URL fallback --}}
                     <div class="mb-0">
-                        <label for="image_url" class="form-label fw-bold">Cover Image URL</label>
-                        <input type="url" class="form-control @error('image_url') is-invalid @enderror" id="image_url" name="image_url" value="{{ old('image_url', $event->image_url) }}" placeholder="https://example.com/banner.jpg">
-                        <div id="image-preview-box" class="mt-3 rounded border p-2 text-center bg-light">
-                            <img id="image-preview" src="{{ $event->image_url ?: 'https://via.placeholder.com/400x200?text=No+Image' }}" class="img-fluid rounded" style="max-height: 200px;">
-                        </div>
-                        @error('image_url') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        <label for="image_url" class="form-label fw-bold">Image URL</label>
+                        <input type="url" class="form-control @error('image_url') is-invalid @enderror" id="image_url" name="image_url" value="{{ old('image_url', $event->image_url) }}" placeholder="https://example.com/banner.jpg" oninput="previewUrl(this.value)">
+                        @error('image_url') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>
             </div>
@@ -178,15 +200,48 @@
 
 @section('scripts')
 <script>
-    const imageUrl = document.getElementById('image_url');
     const previewImg = document.getElementById('image-preview');
+    const defaultImg = '{{ $event->image_url ?: "https://placehold.co/600x300?text=No+Image" }}';
 
-    imageUrl.addEventListener('input', function() {
-        if (this.value) {
-            previewImg.src = this.value;
+    function previewUrl(url) {
+        const fileInput = document.getElementById('image_file');
+        // If there's a file selected, don't update preview from URL
+        if (fileInput.files && fileInput.files[0]) return;
+        
+        previewImg.src = url || defaultImg;
+        previewImg.onerror = function() {
+            this.src = 'https://placehold.co/600x300?text=Invalid+Image+URL';
+        };
+    }
+
+    function previewLocalFile(input) {
+        const errorDiv = document.getElementById('image_file_error');
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            
+            // Check file size (2MB = 2 * 1024 * 1024 bytes)
+            if (file.size > 2 * 1024 * 1024) {
+                input.classList.add('is-invalid');
+                errorDiv.style.display = 'block';
+                input.value = ''; // clear selection
+                previewUrl(document.getElementById('image_url').value);
+                return;
+            } else {
+                input.classList.remove('is-invalid');
+                errorDiv.style.display = 'none';
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
         } else {
-            previewImg.src = 'https://via.placeholder.com/400x200?text=No+Image';
+            // Revert to URL if file is cleared
+            input.classList.remove('is-invalid');
+            errorDiv.style.display = 'none';
+            previewUrl(document.getElementById('image_url').value);
         }
-    });
+    }
 </script>
 @endsection

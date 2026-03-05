@@ -24,7 +24,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center fw-bold" href="{{ url('/') }}">
-                <img src="{{ asset('images/logo.jpg') }}" alt="VT Logo" height="40" class="me-2 rounded shadow-sm">
+                <x-vt-logo :size="40" class="me-2 rounded shadow-sm" />
                 <span>Event Ticketing</span>
             </a>
 

@@ -15,7 +15,7 @@
     </div>
 </div>
 
-<form action="{{ route('admin.events.store') }}" method="POST">
+<form action="{{ route('admin.events.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
     <div class="row mt-4">
         <div class="col-lg-8">
@@ -140,14 +140,35 @@
                 <div class="card-header bg-white py-3">
                     <h5 class="card-title mb-0 text-primary"><i class="fas fa-image me-2"></i>Event Media</h5>
                 </div>
-                <div class="card-body p-4 pt-0">
+                <div class="card-body p-4 pt-3">
+                    {{-- Current image preview --}}
+                    <div class="mb-3 text-center" id="image-preview-wrapper" style="display: none;">
+                        <img id="image-preview" 
+                             src=""
+                             class="img-fluid rounded border" 
+                             style="max-height: 220px; width: 100%; object-fit: cover;"
+                             alt="Preview">
+                    </div>
+
+                    {{-- Upload local file --}}
+                    <div class="mb-3">
+                        <label for="image_file" class="form-label fw-bold">Upload from Computer</label>
+                        <input type="file" class="form-control @error('image_file') is-invalid @enderror" id="image_file" name="image_file" accept="image/jpeg,image/png,image/jpg,image/webp" onchange="previewLocalFile(this)">
+                        <div class="form-text">JPG, PNG or WebP. Max 2MB. <strong>This overrides the URL below.</strong></div>
+                        <div id="image_file_error" class="invalid-feedback" style="display:none;">File must be less than 2MB.</div>
+                        @error('image_file') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    {{-- Divider --}}
+                    <div class="d-flex align-items-center gap-2 mb-3 text-muted small">
+                        <hr class="flex-grow-1 my-0"> OR <hr class="flex-grow-1 my-0">
+                    </div>
+
+                    {{-- URL fallback --}}
                     <div class="mb-0">
-                        <label for="image_url" class="form-label fw-bold">Cover Image URL</label>
-                        <input type="url" class="form-control @error('image_url') is-invalid @enderror" id="image_url" name="image_url" value="{{ old('image_url') }}" placeholder="https://example.com/banner.jpg">
-                        <div id="image-preview-box" class="mt-3 rounded border p-2 text-center bg-light" style="display: none;">
-                            <img id="image-preview" src="" class="img-fluid rounded" style="max-height: 200px;">
-                        </div>
-                        @error('image_url') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        <label for="image_url" class="form-label fw-bold">Image URL</label>
+                        <input type="url" class="form-control @error('image_url') is-invalid @enderror" id="image_url" name="image_url" value="{{ old('image_url') }}" placeholder="https://example.com/banner.jpg" oninput="previewUrl(this.value)">
+                        @error('image_url') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>
             </div>
@@ -173,22 +194,57 @@
 
 @section('scripts')
 <script>
-    const imageUrl = document.getElementById('image_url');
-    const previewBox = document.getElementById('image-preview-box');
+    const previewWrapper = document.getElementById('image-preview-wrapper');
     const previewImg = document.getElementById('image-preview');
 
-    imageUrl.addEventListener('input', function() {
-        if (this.value) {
-            previewImg.src = this.value;
-            previewBox.style.display = 'block';
+    function previewUrl(url) {
+        const fileInput = document.getElementById('image_file');
+        if (fileInput.files && fileInput.files[0]) return;
+        
+        if (url) {
+            previewImg.src = url;
+            previewWrapper.style.display = 'block';
+            previewImg.onerror = function() {
+                this.src = 'https://placehold.co/600x300?text=Invalid+Image+URL';
+            };
         } else {
-            previewBox.style.display = 'none';
+            previewWrapper.style.display = 'none';
         }
-    });
+    }
 
-    if (imageUrl.value) {
-        previewImg.src = imageUrl.value;
-        previewBox.style.display = 'block';
+    function previewLocalFile(input) {
+        const errorDiv = document.getElementById('image_file_error');
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+
+            // Check file size (2MB = 2 * 1024 * 1024 bytes)
+            if (file.size > 2 * 1024 * 1024) {
+                input.classList.add('is-invalid');
+                errorDiv.style.display = 'block';
+                input.value = ''; // clear selection
+                previewUrl(document.getElementById('image_url').value);
+                return;
+            } else {
+                input.classList.remove('is-invalid');
+                errorDiv.style.display = 'none';
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                previewWrapper.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        } else {
+            input.classList.remove('is-invalid');
+            errorDiv.style.display = 'none';
+            previewUrl(document.getElementById('image_url').value);
+        }
+    }
+
+    // Initialize if URL exists (from old input)
+    if (document.getElementById('image_url').value) {
+        previewUrl(document.getElementById('image_url').value);
     }
 </script>
 @endsection

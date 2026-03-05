@@ -33,7 +33,7 @@ Route::get('/success', function () {
     return "Payment Successful!";
 })->name('payment.success');
 // Dashboard (protected)
-Route::get('/dashboard', [EventController::class, 'dashboard'])->middleware('auth');
+Route::get('/dashboard', [EventController::class, 'dashboard'])->middleware('auth')->name('dashboard');
 Route::get('/my-bookings', [\App\Http\Controllers\UserOrderController::class, 'index'])->middleware('auth')->name('my-bookings');
 
 // AJAX: get performers
