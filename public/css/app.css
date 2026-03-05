@@ -11977,7 +11977,7 @@ textarea.form-control-lg {
     display: none !important;
   }
 }
-.card-header {
+.event-card .card-header {
   background-color: #111827 !important;
   color: #f8fafc !important;
   padding: 16px 20px;
@@ -11985,30 +11985,29 @@ textarea.form-control-lg {
   align-items: center;
   justify-content: space-between;
 }
-.card-header .card-title {
+.event-card .card-header .card-title {
   font-size: 1.125rem;
   font-weight: 700;
 }
-.card-header .meta {
+.event-card .card-header .meta {
   display: flex;
   align-items: center;
   gap: 16px;
   color: #6B7280;
   font-size: 0.8rem;
 }
-.card-header .meta .meta-item {
+.event-card .card-header .meta .meta-item {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-
-.card-body {
+.event-card .card-body {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
 }
-.card-body .actions {
+.event-card .card-body .actions {
   display: flex;
   align-items: center;
   gap: 12px;

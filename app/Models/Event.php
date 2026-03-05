@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Event extends Model
 {
     use HasFactory;
-    protected $fillable = ['title', 'description', 'date', 'time', 'venue', 'capacity', 'ticket_price', 'performer_id', 'category_id'];
+    protected $fillable = ['title', 'description', 'date', 'time', 'venue', 'capacity', 'ticket_price', 'performer_id', 'category_id', 'image_url'];
 
     protected $dates = ['date'];
     protected $casts = [
@@ -30,5 +30,10 @@ class Event extends Model
     public function performers()
     {
         return $this->belongsToMany(Performer::class, 'event_performer');
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
     }
 }

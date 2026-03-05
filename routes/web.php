@@ -34,6 +34,7 @@ Route::get('/success', function () {
 })->name('payment.success');
 // Dashboard (protected)
 Route::get('/dashboard', [EventController::class, 'dashboard'])->middleware('auth');
+Route::get('/my-bookings', [\App\Http\Controllers\UserOrderController::class, 'index'])->middleware('auth')->name('my-bookings');
 
 // AJAX: get performers
 Route::get('/events/{id}/performers', [EventController::class, 'getEventWithPerformer']);
@@ -49,3 +50,15 @@ Route::get('/checkout/cancel/{order}', [CheckoutController::class, 'cancel'])->n
 
 // Payment preview page
 Route::get('/checkout/preview/{event}', [CheckoutController::class, 'preview'])->name('checkout.preview');
+// Admin Routes
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::resource('categories', App\Http\Controllers\Admin\CategoryController::class);
+    Route::resource('performers', App\Http\Controllers\Admin\PerformerController::class);
+    Route::resource('events', App\Http\Controllers\Admin\EventController::class);
+    Route::resource('merchandise', App\Http\Controllers\Admin\MerchandiseController::class);
+    Route::resource('discount-codes', App\Http\Controllers\Admin\DiscountCodeController::class);
+    Route::resource('orders', App\Http\Controllers\Admin\OrderController::class)->only(['index', 'show', 'destroy']);
+    Route::put('orders/{order}/status', [App\Http\Controllers\Admin\OrderController::class, 'updateStatus'])->name('orders.update-status');
+    Route::resource('users', App\Http\Controllers\Admin\UserController::class)->only(['index', 'edit', 'update', 'destroy']);
+});

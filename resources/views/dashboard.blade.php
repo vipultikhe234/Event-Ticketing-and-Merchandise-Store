@@ -3,10 +3,32 @@
 @section('title', 'Event Dashboard')
 
 @section('content')
-<div class="container">
-    <h1 class="mb-4">Welcome, {{ $user->name }}</h1>
+<div class="container py-4">
+    <div class="row mb-5 align-items-center">
+        <div class="col-md-6">
+            <h1 class="display-5 fw-bold text-white mb-1">Explore Events</h1>
+            <p class="text-white-50">Discovery your next favorite music experience.</p>
+        </div>
+        <div class="col-md-6 text-end">
+            <form action="{{ route('dashboard') }}" method="GET" class="search-form d-inline-block">
+                <div class="input-group search-group">
+                    <span class="input-group-text bg-dark border-secondary border-end-0 text-white-50"><i class="fas fa-search"></i></span>
+                    <input type="text" name="search" class="form-control bg-dark border-secondary border-start-0 text-white" placeholder="Search events or artists..." value="{{ $search ?? '' }}">
+                    @if($search)
+                        <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary border-secondary"><i class="fas fa-times"></i></a>
+                    @endif
+                </div>
+            </form>
+        </div>
+    </div>
 
-    <h2 class="mb-3">All Events</h2>
+    @if($search)
+        <h4 class="text-white-50 mb-4">Showing results for "<span class="text-white fw-bold">{{ $search }}</span>"</h4>
+    @endif
+
+    <div class="section-divider mb-4">
+        <h2 class="h3 fw-bold text-white"><i class="fas fa-ticket-alt text-primary me-2"></i>Upcoming Events</h2>
+    </div>
 
     <!-- Loading State for Events -->
     <div id="events-loading" class="text-center d-none">
@@ -19,34 +41,67 @@
     <!-- Event Cards Section -->
     <div class="mt-2">
         <div class="row" id="event-cards-container">
-            @foreach ($events as $event)
-                <x-event-card :event="$event" />
-            @endforeach
+            @forelse ($events as $event)
+                <div class="col-md-4 mb-4">
+                    <x-event-card :event="$event" />
+                </div>
+            @empty
+                <div class="col-12">
+                    <div class="alert alert-info bg-dark border-info text-white-50 text-center py-5">
+                        <i class="fas fa-calendar-times opacity-25 display-1 mb-3"></i>
+                        <h5>No events found matching your search.</h5>
+                        <p>Try different keywords or browse all events.</p>
+                        <a href="{{ route('dashboard') }}" class="btn btn-primary mt-2">Browse All</a>
+                    </div>
+                </div>
+            @endforelse
         </div>
     </div>
 
-    <h2 class="mb-3 mt-5">Official Merchandise</h2>
+    <div class="section-divider mb-4 mt-5">
+        <h2 class="h3 fw-bold text-white"><i class="fas fa-shopping-bag text-warning me-2"></i>Official Merchandise</h2>
+    </div>
     <div class="mt-2">
         <div class="row" id="merchandise-cards-container">
-            @foreach ($merchandises as $item)
+            @forelse ($merchandises as $item)
                 <div class="col-md-3 mb-4">
-                    <div class="card h-100 shadow-sm">
+                    <div class="card h-100 shadow-sm bg-dark border-secondary merchandise-card overflow-hidden">
+                        @if($item->image)
+                            <img src="{{ $item->image }}" class="card-img-top" alt="{{ $item->name }}" style="height: 180px; object-fit: cover;">
+                        @else
+                             <div class="bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center" style="height: 180px;">
+                                <i class="fas fa-shopping-bag fa-3x text-white-50"></i>
+                             </div>
+                        @endif
                         <div class="card-body">
-                            <h5 class="card-title text-primary">{{ $item->name }}</h5>
-                            <p class="card-text text-muted">{{ Str::limit($item->description, 60) }}</p>
+                            <h5 class="card-title text-primary fw-bold">{{ $item->name }}</h5>
+                            <p class="card-text text-white-50 small">{{ Str::limit($item->description, 60) }}</p>
                             <div class="d-flex justify-content-between align-items-center mt-3">
-                                <span class="h5 mb-0">₹{{ number_format($item->price, 2) }}</span>
-                                <button class="btn btn-outline-primary btn-sm buy-merch" 
+                                <div>
+                                    <span class="h5 mb-0 d-block text-white">₹{{ number_format($item->price, 2) }}</span>
+                                    <small class="text-{{ $item->stock > 0 ? 'success' : 'danger' }} small">
+                                        {{ $item->stock > 0 ? $item->stock . ' in stock' : 'Out of stock' }}
+                                    </small>
+                                </div>
+                                <button class="btn btn-{{ $item->stock > 0 ? 'primary' : 'secondary disabled' }} btn-sm buy-merch px-3 rounded-pill" 
                                         data-id="{{ $item->id }}" 
                                         data-name="{{ $item->name }}"
-                                        data-price="{{ $item->price }}">
-                                    Buy Now
+                                        data-price="{{ $item->price }}"
+                                        {{ $item->stock <= 0 ? 'disabled' : '' }}>
+                                    {{ $item->stock > 0 ? 'Buy Now' : 'Sold Out' }}
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
-            @endforeach
+            @empty
+                <div class="col-12">
+                     <div class="text-center py-5 text-white-50">
+                        <i class="fas fa-box-open opacity-25 display-3 mb-3"></i>
+                        <h5>No merchandise found matching your search.</h5>
+                    </div>
+                </div>
+            @endforelse
         </div>
     </div>
 
@@ -316,7 +371,7 @@
                 if (data.checkout_url) {
                     window.location.href = data.checkout_url;
                 } else {
-                    throw new Error(data.error || 'Unknown response from server');
+                    throw new Error(data.message || 'Unknown response from server');
                 }
             } catch (error) {
                 console.error('Payment error:', error);

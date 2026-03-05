@@ -6,13 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Event Ticketing')</title>
 
-    <!-- Preload critical resources -->
-    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"></noscript>
-
-    <!-- Defer non-critical CSS -->
-    <link rel="preload" href="{{ mix('css/app.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="{{ mix('css/app.css') }}"></noscript>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ mix('css/app.css') }}">
 
     <!-- Preconnect to CDN -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -25,7 +23,10 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="{{ url('/') }}">Event Ticketing</a>
+            <a class="navbar-brand d-flex align-items-center fw-bold" href="{{ url('/') }}">
+                <img src="{{ asset('images/logo.jpg') }}" alt="VT Logo" height="40" class="me-2 rounded shadow-sm">
+                <span>Event Ticketing</span>
+            </a>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -34,6 +35,18 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     @auth
+                        @if(auth()->user()->role === 'admin')
+                            <li class="nav-item">
+                                <a class="nav-link text-warning fw-bold" href="{{ route('admin.dashboard') }}">
+                                    <i class="fas fa-user-shield me-1"></i> Admin Panel
+                                </a>
+                            </li>
+                        @endif
+                        <li class="nav-item">
+                            <a class="nav-link text-light" href="{{ route('my-bookings') }}">
+                                <i class="fas fa-history me-1"></i> My Bookings
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <span class="nav-link text-light">{{ auth()->user()->name }}</span>
                         </li>

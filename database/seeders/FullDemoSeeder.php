@@ -23,7 +23,7 @@ class FullDemoSeeder extends Seeder
         // 1. USERS
         // ─────────────────────────────────────────
         $users = [
-            ['name' => 'Admin User',   'email' => 'admin@festival.com',  'password' => Hash::make('password')],
+            ['name' => 'Admin User',   'email' => 'admin@festival.com',  'password' => Hash::make('password'), 'role' => 'admin'],
             ['name' => 'Vipul Tikhe',  'email' => 'vipul@festival.com',  'password' => Hash::make('password')],
             ['name' => 'Sarah Connor', 'email' => 'sarah@example.com',   'password' => Hash::make('password')],
             ['name' => 'Raj Patel',    'email' => 'raj@example.com',     'password' => Hash::make('password')],
@@ -182,6 +182,7 @@ class FullDemoSeeder extends Seeder
                 'ticket_price' => 3999,
                 'performer_id' => $pColdplay->id,
                 'category_id'  => $catFestival->id,
+                'capacity'     => 500,
             ],
         ];
 
