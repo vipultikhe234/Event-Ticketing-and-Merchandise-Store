@@ -27,4 +27,9 @@ class Order extends Model
     {
         return $this->belongsTo(Merchandise::class);
     }
+
+    public function discountCode()
+    {
+        return $this->belongsTo(DiscountCode::class, 'discount_code_id');
+    }
 }

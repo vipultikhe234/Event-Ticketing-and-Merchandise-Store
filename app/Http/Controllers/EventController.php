@@ -122,19 +122,35 @@ class EventController extends Controller
      * Passes the events and user data to the dashboard view.
      * Returns the rendered dashboard view with the provided data.
      */
-    public function dashboard()
+    public function dashboard(Request $request)
     {
-        // Caching event listings for 1 hour to improve performance
-        $events = Cache::remember('event_listings', 3600, function () {
-            return Event::with('performer', 'category')->get();
-        });
+        $search = $request->input('search');
 
-        $merchandises = Cache::remember('merchandise_listings', 3600, function () {
-            return \App\Models\Merchandise::all();
-        });
+        // We skip exact caching if searching to provide real-time results, 
+        // but we could also cache search results if needed.
+        $eventsQuery = Event::with(['performer', 'category'])
+            ->withSum(['orders' => function($query) {
+                $query->where('status', 'completed');
+            }], 'quantity')
+            ->latest();
+
+        if ($search) {
+            $eventsQuery->where('title', 'LIKE', "%{$search}%")
+                ->orWhereHas('performer', function($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%");
+                });
+        }
+
+        $events = $eventsQuery->get();
+
+        $merchandisesQuery = \App\Models\Merchandise::latest();
+        if ($search) {
+            $merchandisesQuery->where('name', 'LIKE', "%{$search}%");
+        }
+        $merchandises = $merchandisesQuery->get();
 
         $user = auth()->user();
-        return view('dashboard', compact('events', 'user', 'merchandises'));
+        return view('dashboard', compact('events', 'user', 'merchandises', 'search'));
     }
 
     /**

@@ -22,8 +22,8 @@ class CheckoutController extends Controller
     public function bookEvent(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'event_id'       => 'required_without:merchandise_id|integer|exists:events,id',
-            'merchandise_id' => 'required_without:event_id|integer|exists:merchandises,id',
+            'event_id'       => 'required_without:merchandise_id|nullable|integer|exists:events,id',
+            'merchandise_id' => 'required_without:event_id|nullable|integer|exists:merchandises,id',
             'quantity'       => 'required|integer|min:1',
             'coupon_code'    => 'nullable|string',
             'user_id'        => 'required|integer|exists:users,id',
@@ -38,7 +38,20 @@ class CheckoutController extends Controller
             ? Event::findOrFail($request->event_id) 
             : \App\Models\Merchandise::findOrFail($request->merchandise_id);
 
-        $quantity = $request->quantity;
+        $quantity = (int) $request->quantity;
+
+        // Check Capacity / Stock
+        if ($purchaseType === 'event') {
+            $bookedCount = Order::where('event_id', $item->id)->where('status', 'completed')->sum('quantity');
+            if (($bookedCount + $quantity) > $item->capacity) {
+                return $this->errorResponse("Sorry, only " . ($item->capacity - $bookedCount) . " tickets left.");
+            }
+        } else {
+            if ($quantity > $item->stock) {
+                return $this->errorResponse("Sorry, only {$item->stock} items in stock.");
+            }
+        }
+
         $pricePerItem = $purchaseType === 'event' ? $item->ticket_price : $item->price;
         $initialTotal = $pricePerItem * $quantity;
 
@@ -83,6 +96,7 @@ class CheckoutController extends Controller
                 'total_amount'     => $totalAmount,
                 'status'           => 'pending',
                 'quantity'         => $quantity,
+                'discount_code'    => $request->coupon_code,
                 'discount_code_id' => $discountCodeId,
             ]);
 
@@ -143,6 +157,19 @@ class CheckoutController extends Controller
             if ($session->payment_status === 'paid' && $order) {
                 if ($order->status === 'pending') {
                     $order->update(['status' => 'completed']);
+
+                    // Decrement stock if merchandise
+                    if ($order->merchandise_id) {
+                        $merch = \App\Models\Merchandise::find($order->merchandise_id);
+                        if ($merch) {
+                            $merch->decrement('stock', $order->quantity);
+                        }
+                    }
+
+                    // Clear relevant caches
+                    \Illuminate\Support\Facades\Cache::forget('event_listings');
+                    \Illuminate\Support\Facades\Cache::forget('merchandise_listings');
+
                     SendTicketEmail::dispatch($order);
                 }
                 return response()->json([
