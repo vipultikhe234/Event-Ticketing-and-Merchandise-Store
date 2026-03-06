@@ -1,52 +1,74 @@
-@use 'components/event-card';
-// Bootstrap
+@import 'variables';
 @import '~bootstrap/scss/bootstrap';
 
-// Font Awesome
-@import '~@fortawesome/fontawesome-free/css/all.css';
-
-
-// Custom styles
-.event-card {
-    transition: transform 0.2s;
-
-    &:hover {
-        transform: translateY(-5px);
-    }
+body {
+    background-color: #0f172a; // Deep Navy
+    color: #f1f5f9;
+    font-family: 'Outfit', 'Inter', sans-serif;
 }
 
-.performer-card {
-    img {
-        transition: transform 0.3s;
-    }
+.navbar {
+    background: rgba(15, 23, 42, 0.8) !important;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
 
-    &:hover img {
-        transform: scale(1.05);
+.section-divider {
+    border-left: 4px solid #3b82f6;
+    padding-left: 15px;
+}
+
+// Glassmorphism
+.card,
+.modal-content {
+    background: rgba(30, 41, 59, 0.7) !important;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.merchandise-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    border-color: rgba(59, 130, 246, 0.4) !important;
+}
+
+.search-group {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.input-group-text,
+.form-control {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border: none;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+
+    &:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        transform: scale(1.02);
     }
 }
 
 .countdown-timer {
     .countdown-box {
-        min-width: 70px;
+        background: rgba(15, 23, 42, 0.5);
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .countdown-value {
-        background-color: #1F2937 !important;
-;
-        font-size: 1rem;
-    font-weight: 600;
-    min-width: 80px;
-    text-align: center;    }
-
-    .countdown-label {
-        font-size: 0.75rem;
-        opacity: 0.8;
+        color: #3b82f6;
+        font-family: 'Monaco', monospace;
     }
 }
 
-.time-sep {
-        font-size: 1rem;
-    font-weight: 700;
-    color: #6B7280
-;
-}
+@import 'components/event-card';

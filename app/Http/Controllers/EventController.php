@@ -23,16 +23,15 @@ class EventController extends Controller
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'bio' => 'nullable|string',
+                'category_id' => 'nullable|integer|exists:categories,id',
                 'spotify_id' => 'nullable|string|max:255',
                 'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
             ]);
             if ($validator->fails()) {
-                if ($validator->fails()) {
-                    return response()->json([
-                        "status" => 0,
-                        "message" => $validator->errors()
-                    ], 422);
-                }
+                return response()->json([
+                    "status" => 0,
+                    "message" => $validator->errors()
+                ], 422);
             }
             $imageName = null;
             if ($request->hasFile('image')) {
@@ -83,6 +82,7 @@ class EventController extends Controller
                 'time' => 'required',
                 'venue' => 'required|string|max:255',
                 'ticket_price' => 'required|numeric|min:0',
+                'category_id' => 'nullable|integer|exists:categories,id',
                 'performer_id' => 'required|integer|exists:performers,id',
             ]);
             if ($validator->fails()) {
@@ -98,8 +98,12 @@ class EventController extends Controller
                 'time' => $request->time,
                 'venue' => $request->venue,
                 'ticket_price' => $request->ticket_price,
+                'category_id' => $request->category_id,
                 'performer_id' => $request->performer_id,
             ]);
+
+            // Sync the primary performer to the pivot table for many-to-many support
+            $event->performers()->sync([$request->performer_id]);
             return response()->json([
                 'status' => 1,
                 'message' => 'Event created successfully',
@@ -118,11 +122,35 @@ class EventController extends Controller
      * Passes the events and user data to the dashboard view.
      * Returns the rendered dashboard view with the provided data.
      */
-    public function dashboard()
+    public function dashboard(Request $request)
     {
-        $events = Event::all();
+        $search = $request->input('search');
+
+        // We skip exact caching if searching to provide real-time results, 
+        // but we could also cache search results if needed.
+        $eventsQuery = Event::with(['performer', 'category'])
+            ->withSum(['orders' => function($query) {
+                $query->where('status', 'completed');
+            }], 'quantity')
+            ->latest();
+
+        if ($search) {
+            $eventsQuery->where('title', 'LIKE', "%{$search}%")
+                ->orWhereHas('performer', function($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%");
+                });
+        }
+
+        $events = $eventsQuery->get();
+
+        $merchandisesQuery = \App\Models\Merchandise::latest();
+        if ($search) {
+            $merchandisesQuery->where('name', 'LIKE', "%{$search}%");
+        }
+        $merchandises = $merchandisesQuery->get();
+
         $user = auth()->user();
-        return view('dashboard', compact('events', 'user'));
+        return view('dashboard', compact('events', 'user', 'merchandises', 'search'));
     }
 
     /**
@@ -132,7 +160,7 @@ class EventController extends Controller
      */
     public function getEventWithPerformer($id, SpotifyService $spotify)
     {
-        $event = Event::with('performer')->find($id);
+        $event = Event::with('performer', 'category')->find($id);
 
         if (!$event) {
             return response()->json([
@@ -154,5 +182,27 @@ class EventController extends Controller
             'performer' => $event->performer,
             'performer_tracks' => $performerTracks
         ]);
+    }
+
+    /**
+     * RESTful API: Get all events
+     */
+    public function apiIndex()
+    {
+        return Cache::remember('api_events_index', 3600, function () {
+            return \App\Http\Resources\EventResource::collection(Event::with('performer', 'category')->get());
+        });
+    }
+
+    /**
+     * RESTful API: Get specific event
+     */
+    public function apiShow($id)
+    {
+        $event = Event::with('performer', 'category')->find($id);
+        if (!$event) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
+        return new \App\Http\Resources\EventResource($event);
     }
 }

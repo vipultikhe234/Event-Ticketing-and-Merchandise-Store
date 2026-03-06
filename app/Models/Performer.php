@@ -8,10 +8,15 @@ use Illuminate\Database\Eloquent\Model;
 class Performer extends Model
 {
     use HasFactory;
-    protected $fillable = ['name', 'bio', 'image', 'spotify_id'];
+    protected $fillable = ['name', 'bio', 'image', 'spotify_id', 'category_id'];
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 
     public function events()
     {
-        return $this->belongsToMany(Event::class, 'event_performer', 'performer_id', 'event_id');
+        return $this->belongsToMany(Event::class, 'event_performer');
     }
 }

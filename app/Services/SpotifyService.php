@@ -31,6 +31,7 @@ class SpotifyService
                 return $response->json()['access_token'] ?? null;
             }
 
+            Log::error('Spotify Token Request Failed: ' . $response->body());
             return null;
         });
     }

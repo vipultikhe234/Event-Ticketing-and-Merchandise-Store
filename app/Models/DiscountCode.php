@@ -18,4 +18,9 @@ class DiscountCode extends Model
         if ($this->usage_limit !== null && $this->used_count >= $this->usage_limit) return false;
         return true;
     }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class, 'discount_code', 'code');
+    }
 }
