@@ -75,10 +75,9 @@ class DiscountCodeController extends Controller
                 'message' => 'Coupon code has expired'
             ], 200);
         }
-
         if ($coupon->single_use) {
             $usedByUser = Order::where('user_id', $request->user_id)
-                ->where('discount_code', $coupon->id)
+                ->where('discount_code_id', $coupon->id)
                 ->exists();
 
             if ($usedByUser) {

@@ -1,69 +1,136 @@
-1. Clone the Repository – Clone the project to local machine and navigate to the project folder.
+# 🎫 Event Ticketing & Merchandise Store
 
-2. Install Dependencies – Install all required PHP and JavaScript packages to ensure the application runs smoothly.
-   composer install
-   composer require stripe/stripe-php
-   npm install
-   npm run dev
-   php artisan key:generate
-   php artisan migrate
-   php artisan db:seed --class=SeederClassName
-   php artisan queue:work
-   php artisan serve
-   composer require jwilsson/spotify-web-api-php
+[![Laravel](https://img.shields.io/badge/Laravel-8.x-FF2D20?style=for-the-badge&logo=laravel)](https://laravel.com)
+[![Stripe](https://img.shields.io/badge/Stripe-Enabled-626CD9?style=for-the-badge&logo=stripe)](https://stripe.com)
+[![Spotify](https://img.shields.io/badge/Spotify-Integrated-1DB954?style=for-the-badge&logo=spotify)](https://developer.spotify.com/)
+[![MySQL](https://img.shields.io/badge/Database-MySQL-4479A1?style=for-the-badge&logo=mysql)](https://www.mysql.com/)
 
-3. Configure Environment – Update the .env file with database connection, Stripe API keys, queue connection, and mail settings.
+A comprehensive Full-Stack platform designed to streamline event management, performer engagement, and secure ticket purchasing. Built with **Laravel**, this enterprise-ready system integrates real-time music discovery via Spotify and secure payment processing via Stripe, all while maintaining high performance through asynchronous task handling.
 
-4. Run Migrations – Create the necessary database tables:
-   performers → Stores artists.
-   events → Stores event details linked to performers.
-   discount_codes → Stores discount/coupon codes.
-   orders → Tracks ticket purchases and payments.
+---
 
-5. Seed the Database – Insert sample data for performers, events, and discount codes to facilitate testing.
+## 🏗️ System Architecture
 
-6. Start the Queue Worker – Start the queue to process background jobs such as sending ticket confirmation emails.
+The application is built on a robust monolithic architecture with external service integrations and background job processing:
 
-7. Run the Application – Launch the local development server and access the application in browser.
+```mermaid
+graph TD
+    Client[Web Browser] -->|HTTP/REST| Laravel[Laravel 8.x App]
+    
+    subgraph "Core Backend"
+        Laravel -->|ORM| DB[(MySQL Database)]
+        Laravel -->|Queues| DB_Queue[(Database Queue)]
+        DB_Queue -->|Worker| Mailer[SMTP Mail Server]
+    end
+    
+    subgraph "Third-Party Integrations"
+        Laravel -->|Secure Checkout| Stripe[Stripe API]
+        Laravel -->|Music Metadata| Spotify[Spotify API]
+    end
+    
+    subgraph "UI Layer"
+        Laravel -->|Blade| Blade[Blade Templates]
+        Blade --- Alpine[Alpine.js]
+        Blade --- Tailwind[Tailwind CSS]
+    end
+```
 
-8. Dependencies Required – PHP, Composer, Node.js, npm, Laravel framework, Stripe PHP SDK, and a MySQL database.
+---
 
-9. Project Approach – The project is an event ticketing system that allows users to browse events, apply discount codes, purchase tickets via Stripe Checkout, and receive confirmation emails through queued jobs. The database links performers to events, tracks orders, and manages discount codes, following Laravel best practices and clean code structure.
+## ✨ Key Features
 
-10. Required PHP Extensions for Laravel + Stripe
-    In php.ini (usually in php\php.ini or XAMPP):
-    extension=curl → For HTTP requests (Stripe API)
-    extension=openssl → For secure connections
-    extension=mbstring → String handling
-    extension=pdo_mysql → MySQL connection
-    extension=bcmath → Laravel calculations (optional but recommended)
-    extension=fileinfo → Required for file uploads
+### 👔 Admin Intelligence Dashboard
+*   **Live Metrics**: Real-time tracking of **Total Revenue**, **Total Orders**, and platform activity (Events, Performers, Categories).
+*   **Centralized Control**: Unified administrative interface to manage the entire merchandise stock, category hierarchies, and user accounts.
+*   **Order Management**: Detailed tracking of ticket purchases with the ability to update order statuses and manage single-use discount codes.
 
-11. Payment Gateway (Stripe) Setup
+### 🛡️ Secure & Optimized Backend
+*   **Asynchronous Processing**: Leverages **Laravel Queues** for background job processing. Ticket confirmation emails are dispatched off the main thread, ensuring a zero-lag checkout experience.
+*   **Music-Enhanced Profiles**: Deep integration with the **Spotify API** to automatically fetch and display performer top tracks and previews, enriching the event discovery process.
+*   **Enterprise Security**: Custom authentication middleware, role-based access control (Admin/User), and secure session management.
 
-    1. Create a Stripe Account – Sign up at https://stripe.com
-       to get access to API keys.
-    2. Obtain API Keys – Publishable Key → For frontend (Stripe.js) -> Secret Key → For backend (server-side requests)
-    3. Update .env File – Add your Stripe keys: -> STRIPE_KEY=your_stripe_publishable_key -> STRIPE_SECRET=your_stripe_secret_key
-    4. Stripe PHP SDK – Make sure the package is installed: -> composer require stripe/stripe-php
-    5. Checkout Integration – The backend uses Stripe Checkout to create payment sessions. Users are redirected to Stripe’s secure payment page.
-    6. Handling Payment Success/Failure – After payment:
-    7. Stripe returns session_id to your success URL.
-    8. The application verifies the payment and updates the order status.
-    9. Emails (tickets) are sent via queued jobs.
+### 💳 Seamless Ticketing Experience
+*   **Stripe Integration**: Professional payment flow with **Stripe Checkout**, supporting secure 3D-secure transactions and automated order fulfillment.
+*   **Dynamic Promo Engine**: Modular system for managing percentage-based discount codes with expiration dates and single-use constraints.
 
-12. Ngrok implementation -> Ngrok is a tool that exposes local development server to the internet via a secure public URL.
-    Laravel application runs locally (e.g., http://127.0.0.1:8000).
-    services like Stripe payment require a publicly accessible URL.
-    Ngrok generates a temporary HTTPS URL (like https://concessive-ventilable-angelica.ngrok-free.dev) that can be used as a callback URL
+---
 
-    1. Install Ngrok -> Download from https://ngrok.com/ and install it.
-    2. Expose Local Server -> If Laravel server is running on port 8000: ngrok http 8000 ->This will generate a public HTTPS URL. -> Example: https://concessive-ventilable-angelica.ngrok-free.dev
-    3. Update .env ->Set APP_URL to your Ngrok URL: -> APP_URL=https://concessive-ventilable-angelica.ngrok-free.dev
+## 🛠️ Application Ecosystem
 
-13. Spotify Integration (Performers Table)
-    1. Purpose -> The goal of integrating Spotify is to associate performers with their Spotify content so that users can preview their music, see albums, or listen to tracks before buying tickets. This improves user engagement and creates a richer event experience.
-    2. Spotify Developer Account -> Sign up at Spotify for Developers -> Create a new application to get: -> Client ID -> Client Secret
-    3. Install Spotify API Package -> composer require jwilsson/spotify-web-api-php
-    4. Configuration -> SPOTIFY_CLIENT_ID=your_client_id -> SPOTIFY_CLIENT_SECRET=your_client_secret
-"# Event-Ticketing-and-Merchandise-Store" 
+| Component | Responsibility | Primary Tech |
+| :--- | :--- | :--- |
+| **Authentication** | Custom User Auth & Admin Middleware | Laravel Auth |
+| **Payments** | Ticket bookings and secure fulfillment | Stripe SDK |
+| **Music Data** | Performer enrichment & track previews | Spotify Web API |
+| **Messaging** | Asynchronous ticket delivery & notifications | Laravel Queues |
+| **Storage** | Relational data management & caching | MySQL + Redis (Optional) |
+| **Frontend** | Responsive & Interactive UI | Tailwind + Alpine.js |
+
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisites
+*   **PHP 7.4+** & **Composer**
+*   **Node.js 16+** & **npm**
+*   **MySQL Database**
+
+### 2. Installation & Setup
+```bash
+# Clone the repository
+git clone https://github.com/vipultikhe234/Event-Ticketing-and-Merchandise-Store.git
+cd event-ticketing
+
+# Install Backend Dependencies
+composer install
+
+# Install Frontend Dependencies
+npm install && npm run dev
+```
+
+### 3. Environment Configuration
+Copy `.env.example` to `.env` and set your credentials:
+*   `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`
+*   `STRIPE_KEY`, `STRIPE_SECRET`
+*   `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`
+
+### 4. Database & Queues
+```bash
+# Generate Key & Migrate
+php artisan key:generate
+php artisan migrate --seed
+
+# Start the worker for automated emails
+php artisan queue:work
+```
+
+---
+
+## 🔒 Security Configuration
+The project utilizes strict environment control for sensitive data. Ensure you have the following keys properly configured:
+*   `APP_KEY`: For session and data encryption.
+*   `STRIPE_SECRET`: For secure server-side payment verification.
+*   `SPOTIFY_CLIENT_SECRET`: For API authentication.
+
+---
+
+## 📂 Project Structure
+```text
+.
+├── app/Http/Controllers/  # core Logic (Checkout, Events, Admin)
+├── app/Models/            # Database Entities
+├── app/Jobs/              # Asynchronous Tasks (Ticket Discovery)
+├── database/migrations/   # Database Schema Definitions
+├── resources/views/       # Blade Templates & Components
+├── routes/                # Web & API Route Definitions
+└── tailwind.config.js     # Design System Configuration
+```
+
+---
+
+## 🛡️ License
+Distributed under the MIT License. See `LICENSE` for more information.
+
+---
+
+Developed with ❤️ by **[Vipul Tikhe](https://github.com/vipultikhe234)**

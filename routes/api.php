@@ -35,7 +35,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::controller(EventController::class)->group(function () {
     Route::post('/register_performer', 'registerPerformer');
     Route::post('/register_event', 'registerEvent');
-    Route::get('/get_performer', 'getEventWithPerformer');
+    Route::get('/get_performer/{id}', 'getEventWithPerformer');
 });
 
 // RESTful API for Events
