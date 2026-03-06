@@ -8,3 +8,9 @@
 
 /.github export-ignore
 CHANGELOG.md export-ignore
+
+# Language Detection Overrides
+/public/css/* linguist-vendored
+/public/js/* linguist-vendored
+*.css linguist-vendored
+*.js linguist-vendored

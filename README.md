@@ -71,36 +71,50 @@ graph TD
 ## 🚀 Getting Started
 
 ### 1. Prerequisites
-*   **PHP 7.4+** & **Composer**
-*   **Node.js 16+** & **npm**
-*   **MySQL Database**
+Follow these requirements before setting up the project:
+*   **PHP 7.4+** and **Composer**
+*   **Node.js 16+** and **npm**
+*   **MySQL Database** for storage
 
 ### 2. Installation & Setup
+
+**Clone the repository**
 ```bash
-# Clone the repository
 git clone https://github.com/vipultikhe234/Event-Ticketing-and-Merchandise-Store.git
 cd event-ticketing
+```
 
-# Install Backend Dependencies
+**Install Backend Dependencies**
+```bash
 composer install
+```
 
-# Install Frontend Dependencies
+**Install Frontend Dependencies**
+```bash
 npm install && npm run dev
 ```
 
 ### 3. Environment Configuration
-Copy `.env.example` to `.env` and set your credentials:
-*   `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`
-*   `STRIPE_KEY`, `STRIPE_SECRET`
-*   `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`
+Copy the `.env.example` to `.env` and configure your credentials:
+*   **Database**: Set `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD`.
+*   **Stripe**: Configure `STRIPE_KEY` and `STRIPE_SECRET`.
+*   **Spotify**: Add `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`.
 
 ### 4. Database & Queues
-```bash
-# Generate Key & Migrate
-php artisan key:generate
-php artisan migrate --seed
+Initialize the database and start the background workers:
 
-# Start the worker for automated emails
+**Generate Application Key**
+```bash
+php artisan key:generate
+```
+
+**Run Migrations & Seeders**
+```bash
+php artisan migrate --seed
+```
+
+**Start Queue Worker**
+```bash
 php artisan queue:work
 ```
 
@@ -108,9 +122,9 @@ php artisan queue:work
 
 ## 🔒 Security Configuration
 The project utilizes strict environment control for sensitive data. Ensure you have the following keys properly configured:
-*   `APP_KEY`: For session and data encryption.
-*   `STRIPE_SECRET`: For secure server-side payment verification.
-*   `SPOTIFY_CLIENT_SECRET`: For API authentication.
+*   `APP_KEY`: Essential for session security and data encryption.
+*   `STRIPE_SECRET`: Required for secure server-side payment verification.
+*   `SPOTIFY_CLIENT_SECRET`: Used for restricted API authentication.
 
 ---
 
@@ -119,7 +133,7 @@ The project utilizes strict environment control for sensitive data. Ensure you h
 .
 ├── app/Http/Controllers/  # core Logic (Checkout, Events, Admin)
 ├── app/Models/            # Database Entities
-├── app/Jobs/              # Asynchronous Tasks (Ticket Discovery)
+├── app/Jobs/              # Asynchronous Tasks (Ticket Delivery)
 ├── database/migrations/   # Database Schema Definitions
 ├── resources/views/       # Blade Templates & Components
 ├── routes/                # Web & API Route Definitions
